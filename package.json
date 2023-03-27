@@ -1,0 +1,19 @@
+{
+	"name": "arc-plugin-tables-local-indexes",
+	"version": "0.0.1",
+	"description": "Architect plugin to setup Local Secondary Indexes (LSI) in DynamoDB tables.",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"architect",
+		"arc",
+		"plugin",
+		"lsi",
+		"dynamodb",
+		"tables"
+	],
+	"author": "Rafael Sacramento",
+	"license": "Apache-2.0"
+}
