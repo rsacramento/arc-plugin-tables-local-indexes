@@ -1,127 +1,91 @@
-// let { join } = require('path')
+const { is, capitalize } = require("@architect/inventory/src/lib")
 
+const unique = objArray => [...new Set(objArray.map(i => Object.keys(i)[0]))]
+// TODO: Update AttributeDefinitions
 module.exports = {
-  // Setters
-  set: {
-    /**
-     * Pragmas
-     */
-    // @events
-    // events: ({ arc, inventory }) => {
-    //   return {
-    //     name: 'my-event',
-    //     src: join('path', 'to', 'code'),
-    //   }
-    // },
+	deploy: {
+		start: async ({ arc, cloudformation, dryRun, inventory, stage }) => {
+			let cfn = cloudformation
 
-    // @queues
-    // queues: ({ arc, inventory }) => {
-    //   return {
-    //     name: 'my-queue',
-    //     src: join('path', 'to', 'code'),
-    //   }
-    // },
+			const localIndexes = arc["tables-local-indexes"]
+			if (!Array.isArray(localIndexes) || !localIndexes.length) return cloudformation
 
-    // @http
-    // http: ({ arc, inventory }) => {
-    //   return {
-    //     method: 'get',
-    //     path: '/*'
-    //     src: join('path', 'to', 'code'),
-    //   }
-    // },
+			const arcTables = arc.tables
 
-    // @scheduled
-    // scheduled: ({ arc, inventory }) => {
-    //   return {
-    //     name: 'my-scheduled-event',
-    //     src: join('path', 'to', 'code'),
-    //     rate: '1 day', // or...
-    //     cron: '* * * * * *',
-    //   }
-    // },
+			if (!Array.isArray(arcTables) || !unique(localIndexes).every(i => unique(arcTables).includes(i))) {
+				throw ReferenceError(`Specifying @tables-local-indexes requires specifying corresponding @tables`)
+			}
 
-    // @tables-streams
-    // 'tables-streams': ({ arc, inventory }) => {
-    //   return {
-    //     name: 'my-table-stream',
-    //     table: 'app-data',
-    //     src: join('path', 'to', 'code'),
-    //   }
-    // },
+			arcTables.forEach(table => {
+				const name = Object.keys(table).pop()
 
-    // Custom / bare Lambdas (with event sources to be defined by `deploy.start`)
-    // customLambdas: ({ arc, inventory }) => {
-    //   return {
-    //     name: 'my-custom-lambda',
-    //     src: join('path', 'to', 'code'),
-    //   }
-    // },
+				const tableName = name
+					?.split(/[-._]/)
+					.map(p => capitalize(p))
+					.join("")
+					.concat("Table")
 
-    /**
-     * Resources
-     */
-    // Environment variables
-    // env: ({ arc, inventory }) => {
-    //   return {
-    //     MY_ENV_VAR: 'ok',
-    //     ANOTHER_VAR: { objects_and_arrays_are_automatically_json_encoded: 'neat!' }
-    //   }
-    // },
+				const lsiProperty = localIndexes
+					.filter(arcLSI => Object.keys(arcLSI).pop() === name)
+					.reduce((prop, arcLSI) => {
+						const pk = cfn.Resources[tableName].Properties.KeySchema.filter(k => k.KeyType === "HASH")[0].AttributeName
+						let lsiTemplate = {
+							IndexName: undefined,
+							KeySchema: [
+								{
+									AttributeName: pk,
+									KeyType: "HASH",
+								},
+								{
+									AttributeName: undefined,
+									KeyType: "RANGE",
+								},
+							],
+							Projection: {
+								ProjectionType: "ALL",
+							},
+						}
 
-    // Custom runtimes
-    // runtimes: ({ arc, inventory }) => {
-    //   return {
-    //     name: 'runtime-name',
-    //     type: 'transpiled',
-    //     build: '.build',
-    //     baseRuntime: 'nodejs14.x',
-    //   }
-    // },
-  },
+						const lsiEntries = Object.entries(arcLSI[name])
+						const lsi = lsiEntries.reduce((cfnLSI, entry) => {
+							switch (entry[0]) {
+								case "name":
+									cfnLSI.IndexName = entry[1]
+									break
+								case "projection":
+									if (entry[1] === "keys") {
+										cfnLSI.Projection.ProjectionType = "KEYS_ONLY"
+									} else if (entry[1] === "all") {
+										cfnLSI.Projection.ProjectionType = "ALL"
+									} else {
+										cfnLSI.Projection.ProjectionType = "INCLUDE"
+										cfnLSI.Projection.NonKeyAttributes = Array.isArray(entry[1]) ? entry[1] : entry[1].split(" ")
+									}
+									break
+								default:
+									if (is.primaryKey(entry[1]) && entry[1] !== pk) {
+										throw ReferenceError(
+											`The partition key of a Local Secondary Index must be the same of the base table (${pk}). It cannot be ${entry[0]}.`
+										)
+									}
+									if (is.sortKey(entry[1])) {
+										cfnLSI.KeySchema.map(key => (key.KeyType === "RANGE" ? (key.AttributeName = entry[0]) : null))
+									}
+							}
 
-  // Deploy
-  deploy: {
-    // Pre-deploy operations
-    // start: async ({ arc, cloudformation, dryRun, inventory, stage }) => {
-    //   // Run operations prior to deployment
-    //   // Optionally return mutated `cloudformation`
-    // },
+							return cfnLSI
+						}, lsiTemplate)
 
-    // Architect service discovery and config data
-    // services: async ({ arc, cloudformation, dryRun, inventory, stage }) => {
-    //   return {
-    //     'service-name': 'value or ARN', // Register a service, or...
-    //     'arbitrary-data': '...' // Add up to 4KB of arbitrary data / config as a string
-    //   }
-    // },
+						lsi.IndexName ??= `${pk}-${lsi.KeySchema.filter(k => k.KeyType === "RANGE")[0].AttributeName}-index`
 
-    // Alternate deployment targets
-    // target: async ({ arc, cloudformation, dryRun, inventory, stage }) => {
-    //   // Deploy to a target other than AWS (e.g. Begin, Serverless Cloud, etc.)
-    // },
+						prop.push(lsi)
+						return prop
+					}, [])
 
-    // Post-deploy operations
-    // end: async ({ arc, cloudformation, dryRun, inventory, stage }) => {
-    //   // Run operations after to deployment
-    // },
-  },
+				cfn.Resources[tableName].Properties.LocalSecondaryIndexes = lsiProperty
+			})
 
-  // Sandbox
-  sandbox: {
-    // Startup operations
-    // start: async ({ arc, inventory, invoke }) => {
-    //   // Run operations upon Sandbox startup
-    // },
-
-    // Project filesystem watcher
-    // watcher: async ({ filename, event, inventory, invoke }) => {
-    //   // Act on filesystem events within your project
-    // },
-
-    // Shutdown operations
-    // end: async ({ arc, inventory, invoke }) => {
-    //   // Run operations upon Sandbox shutdown
-    // },
-  }
+			return cloudformation
+		},
+	},
 }
