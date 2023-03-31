@@ -29,7 +29,7 @@ Defines [Local Secondary Indexes][lsi] for your project's [DynamoDB][ddb] tables
 
 ## Example
 
-The following `app.arc` file defines a [DynamoDB][ddb] table with two named [Local Secondary Indexes][lsi], both with `projection` explicitly defined:
+The following `app.arc` file defines a [DynamoDB][ddb] table with two [Local Secondary Indexes][lsi], both with `projection` explicitly defined:
 
 ```arc
 @app
