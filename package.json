@@ -1,6 +1,6 @@
 {
 	"name": "arc-plugin-tables-local-indexes",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Architect plugin to setup Local Secondary Indexes (LSI) in DynamoDB tables.",
 	"homepage": "https://github.com/rsacramento/arc-plugin-tables-local-indexes",
 	"author": "Rafael Sacramento",
@@ -20,16 +20,5 @@
 	"engines": {
 		"node": ">=16"
 	},
-	"main": "index.js",
-	"scripts": {
-		"lint": "eslint . --fix",
-		"test": "npm run lint"
-	},
-	"devDependencies": {
-		"@architect/eslint-config": "~2.1.1",
-		"eslint": "^8.31.0"
-	},
-	"eslintConfig": {
-		"extends": "@architect/eslint-config"
-	}
+	"main": "index.js"
 }
