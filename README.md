@@ -23,13 +23,13 @@ Defines [Local Secondary Indexes][lsi] for your project's [DynamoDB][ddb] tables
   - Customizing which attributes to project can be helpful when trying to save on [bandwidth costs][pricing]
   - Note that once a projection is defined, it cannot be changed; a new table would need to be created
   - Acceptable values for `projection` are:
-    - `all` (default): all item attributes from the table are projected into the index
-    - `keys`: only the base table partition key and the local secondary index sort key are projected into the index
-    - Custom: otherwise, you may define one or more attribute names to explicitly project into the index. Note that the base table partition key and index sort key always get projected
+    - `all` (default): all item attributes from the table are projected
+    - `keys`: only the base table's partition key and the local secondary index' sort key are projected
+    - Custom: otherwise, you may define one or more attribute names to explicitly project into the index. Note that the base table's partition key and index' sort key always get projected
 
 ## Example
 
-The following `app.arc` file defines a [DynamoDB][ddb] table with two named [Local Secondary Indexes][gsi], both with `projection` explicitly defined:
+The following `app.arc` file defines a [DynamoDB][ddb] table with two named [Local Secondary Indexes][lsi], both with `projection` explicitly defined:
 
 ```arc
 @app
@@ -42,13 +42,13 @@ accounts
 @tables-local-indexes
 accounts
   email **String # Sort key is required!
-  projection keys # only project base table partition key and index sort key (in this example that would be accountID and email)
+  projection keys # only project base table's partition key and index' sort key (in this example that would be accountID and email)
   name byEmail
 
 accounts
   accountID *String # Partition key is the same as the main table, but it is optional
   created **String # Sort key is required!
-  projection updated lastAccessed # only project base table partition key and index sort key plus the updated and lastAccessed attributes
+  projection updated lastAccessed # only project base table's partition key and index' sort key, plus the updated and lastAccessed attributes
 ```
 
 [tables]: tables
