@@ -46,7 +46,7 @@ accounts
   name byEmail
 
 accounts
-  accountID *String # Partition key is the same as the main table, but it is optional
+  accountID *String # Partition key is the same as the main table - it is optional, but explicitly declared here
   created **String # Sort key is required!
   projection updated lastAccessed # only project base table's partition key and index' sort key, plus the updated and lastAccessed attributes
 ```
