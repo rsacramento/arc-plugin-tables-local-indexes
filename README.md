@@ -1,4 +1,4 @@
-# @tables-local-indexes
+# [Architect][arc] plugin: `@tables-local-indexes`
 
 Defines [Local Secondary Indexes][lsi] for your project's [DynamoDB][ddb] tables. `@tables-local-indexes` should only ever be paired with [`@tables`][tables].
 
@@ -51,7 +51,8 @@ accounts
   projection updated lastAccessed # only project base table's partition key and index' sort key, plus the updated and lastAccessed attributes
 ```
 
-[tables]: tables
+[arc]: https://arc.codes
+[tables]: https://arc.codes/docs/en/reference/project-manifest/tables
 [core]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html
 [ddb]: https://aws.amazon.com/documentation/dynamodb/
 [lsi]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LSI.html
