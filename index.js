@@ -1,4 +1,4 @@
-const { is, capitalize, errorFmt } = require("@architect/inventory/src/lib")
+const { is, capitalize } = require("@architect/inventory/src/lib")
 
 const unique = objArray => [...new Set(objArray.map(i => Object.keys(i)[0]))]
 
@@ -47,7 +47,7 @@ module.exports = {
 							},
 						}
 
-						// Check if table has no Local Index
+						// Check if table has a Local Index
 						const hasLocalIndex = unique(localIndexes).includes(Object.keys(table)[0])
 
 						// Reduce Local Indexes' attributes into CloudFormation LSI properties
@@ -82,7 +82,7 @@ module.exports = {
 													})
 												} else if (is.primaryKey(attr[1]) && attr[1] !== pk) {
 													throw ReferenceError(
-														`The partition key of a Local Secondary Index must be the same of the base table (${pk}). It cannot be ${attr[0]}.`
+														`The partition key of a Local Secondary Index must be the same as the base table's (${pk}). It cannot be ${attr[0]}.`
 													)
 												}
 										}
