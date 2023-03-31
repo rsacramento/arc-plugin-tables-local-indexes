@@ -75,12 +75,15 @@ module.exports = {
 											default:
 												if (is.sortKey(attr[1])) {
 													cfnLSI.KeySchema.map(key => (key.KeyType === "RANGE" ? (key.AttributeName = attr[0]) : null))
+													const sortKeyType = attr[1] ? attr[1].replace("**", "").slice(0, 1).toUpperCase() : "S"
+													cfnProps.AttributeDefinitions.push({
+														AttributeName: attr[0],
+														AttributeType: sortKeyType,
+													})
 												} else if (is.primaryKey(attr[1]) && attr[1] !== pk) {
 													throw ReferenceError(
 														`The partition key of a Local Secondary Index must be the same of the base table (${pk}). It cannot be ${attr[0]}.`
 													)
-												} else {
-													// TODO: Update AttributeDefinitions
 												}
 										}
 
